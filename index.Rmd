@@ -9,22 +9,92 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+This project uses the following packages:
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+* caret
+* parallel
+* doParallel
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r libraries, message=FALSE, warning=FALSE}
+library(caret)
+library(parallel)
+library(doParallel)
 ```
 
-## Including Plots
+## Read and Clean the Data
 
-You can also embed plots, for example:
+First we read in the data to create two data frames:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+* train - this will be used to train the model.
+* test - this is the data set that will be used to test our trained model
+
+```{r read_data}
+setwd("~/Documents/ml/project")
+train <- read.csv("pml-training.csv")
+test <- read.csv("pml-testing.csv")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+The train data set initially includes `r nrow(train)` rows and `r ncol(train)` columns. The test data set initially includes `r nrow(test)` rows and `r ncol(test)` columns. The train data set includes rows that summarize multiple other rows. We remove these rows so we are only using raw data for training our model. We then remove the columns from the train data set that held the summary data as they are no longer required.
+
+```{r process_data}
+train <- train[!(train$new_window=='yes'),] #remove summary rows
+keep_cols <- c("num_window","roll_belt","pitch_belt","yaw_belt","total_accel_belt","gyros_belt_x","gyros_belt_y","gyros_belt_z","accel_belt_x","accel_belt_y","accel_belt_z","magnet_belt_x","magnet_belt_y","magnet_belt_z","roll_arm","pitch_arm","yaw_arm","total_accel_arm","gyros_arm_x","gyros_arm_y","gyros_arm_z","accel_arm_x","accel_arm_y","accel_arm_z","magnet_arm_x","magnet_arm_y","magnet_arm_z","roll_dumbbell","pitch_dumbbell","yaw_dumbbell","total_accel_dumbbell","gyros_dumbbell_x","gyros_dumbbell_y","gyros_dumbbell_z","accel_dumbbell_x","accel_dumbbell_y","accel_dumbbell_z","magnet_dumbbell_x","magnet_dumbbell_y","magnet_dumbbell_z","roll_forearm","pitch_forearm","yaw_forearm","total_accel_forearm","gyros_forearm_x","gyros_forearm_y","gyros_forearm_z","accel_forearm_x","accel_forearm_y","accel_forearm_z", "magnet_forearm_x","magnet_forearm_y","magnet_forearm_z","classe")
+train <- train[keep_cols]
+```
+
+After cleaning the train data set has `r nrow(train)` rows and `r ncol(train)` columns.
+
+## Create the Model
+
+We are ready to create our model after the data set has been properly cleaned. Our goal is to predict the classe variable, so we create the data partition based on this variable. We then create the training and testing sets that will be used for the model creation and testing.
+
+```{r create_model}
+inTrain = createDataPartition(y=train$classe, p = 0.70,list=FALSE)
+training = train[inTrain,]
+testing = train[-inTrain,]
+```
+
+We will use the parallel and doParallel libraries to enable parallel processing. This will greatly speed up our model training. This step involves some initial configuration.
+
+```{r setup_parallel}
+cluster <- makeCluster(detectCores() - 1) # convention to leave 1 core for OS
+registerDoParallel(cluster)
+```
+
+Now we are ready to configure and train our model. We will use 5x cross validation to train our model. We will train on the classe variable in the train data set, against all of the other variables in the data set. We use random forests as they are well suited for prediction. The ntree option is set to 10 to improve performance.
+
+```{r train_model}
+fitControl <- trainControl(method = "cv",
+                           number = 5,
+                           allowParallel = TRUE)
+
+modFit <- train(classe ~ ., data=training,method='rf',ntree=10,trControl=fitControl)
+```
+
+We then close our parallel processing by de-registering the parallel processing cluster.
+
+```{r stop_parallel}
+stopCluster(cluster)
+registerDoSEQ()
+```
+
+## Assess the Model
+
+We will first use our model to predict on the testing data set.
+
+```{r prediction1}
+pred <- predict(modFit,testing)
+```
+
+We will use the confustionMatrix function to assess the accuracy of the prediction. Since random forests work well for prediction, we expect a high accuracy rate.
+
+```{r accuracy_testing}
+confusionMatrix(pred,testing$classe)
+```
+
+As you can see the accuracy is >99%. This gives us high confidence we will successfully predict the classe variable in the test data set. First we use our model to predict on the test data set, then we display the predictions.
+
+```{r prediction2}
+pred2 <- predict(modFit,test)
+pred2
+```
