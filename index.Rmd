@@ -86,13 +86,13 @@ We will first use our model to predict on the testing data set.
 pred <- predict(modFit,testing)
 ```
 
-We will use the confustionMatrix function to assess the accuracy of the prediction. Since random forests work well for prediction, we expect a high accuracy rate (in the high 90's).
+We will use the confustionMatrix function to assess the accuracy of the prediction. Since random forests work well for prediction, we expect a high accuracy rate (in the high 90's) and a very low out of sample error rate (less than 10%).
 
 ```{r accuracy_testing}
 confusionMatrix(pred,testing$classe)
 ```
 
-As you can see the accuracy is >99%. This gives us high confidence we will successfully predict the classe variable in the test data set. First we use our model to predict on the test data set, then we display the predictions.
+As you can see the accuracy is >99% with an out of sample error rate <1%. This gives us high confidence we will successfully predict the classe variable in the test data set. First we use our model to predict on the test data set, then we display the predictions.
 
 ```{r prediction2}
 pred2 <- predict(modFit,test)
