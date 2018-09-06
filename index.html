@@ -176,17 +176,17 @@ registerDoSEQ()</code></pre>
 <h2>Assess the Model</h2>
 <p>We will first use our model to predict on the testing data set.</p>
 <pre class="r"><code>pred &lt;- predict(modFit,testing)</code></pre>
-<p>We will use the confustionMatrix function to assess the accuracy of the prediction. Since random forests work well for prediction, we expect a high accuracy rate.</p>
+<p>We will use the confustionMatrix function to assess the accuracy of the prediction. Since random forests work well for prediction, we expect a high accuracy rate (in the high 90’s) and a very low out of sample error rate (less than 10%).</p>
 <pre class="r"><code>confusionMatrix(pred,testing$classe)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1640    2    0    0    0
-##          B    1 1111    0    0    3
-##          C    0    0 1005    7    2
-##          D    0    1    0  937    2
-##          E    0    1    0    0 1051
+##          A 1641    4    0    0    0
+##          B    0 1106    1    0    0
+##          C    0    3 1003    7    0
+##          D    0    1    1  937    1
+##          E    0    1    0    0 1057
 ## 
 ## Overall Statistics
 ##                                          
@@ -201,15 +201,15 @@ registerDoSEQ()</code></pre>
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9994   0.9964   1.0000   0.9926   0.9934
-## Specificity            0.9995   0.9991   0.9981   0.9994   0.9998
-## Pos Pred Value         0.9988   0.9964   0.9911   0.9968   0.9990
-## Neg Pred Value         0.9998   0.9991   1.0000   0.9985   0.9985
+## Sensitivity            1.0000   0.9919   0.9980   0.9926   0.9991
+## Specificity            0.9990   0.9998   0.9979   0.9994   0.9998
+## Pos Pred Value         0.9976   0.9991   0.9901   0.9968   0.9991
+## Neg Pred Value         1.0000   0.9981   0.9996   0.9985   0.9998
 ## Prevalence             0.2847   0.1935   0.1744   0.1638   0.1836
-## Detection Rate         0.2846   0.1928   0.1744   0.1626   0.1824
-## Detection Prevalence   0.2849   0.1935   0.1760   0.1631   0.1825
-## Balanced Accuracy      0.9995   0.9978   0.9991   0.9960   0.9966</code></pre>
-<p>As you can see the accuracy is &gt;99%. This gives us high confidence we will successfully predict the classe variable in the test data set. First we use our model to predict on the test data set, then we display the predictions.</p>
+## Detection Rate         0.2847   0.1919   0.1740   0.1626   0.1834
+## Detection Prevalence   0.2854   0.1921   0.1758   0.1631   0.1836
+## Balanced Accuracy      0.9995   0.9959   0.9980   0.9960   0.9994</code></pre>
+<p>As you can see the accuracy is &gt;99% with an out of sample error rate &lt;1%. This gives us high confidence we will successfully predict the classe variable in the test data set. First we use our model to predict on the test data set, then we display the predictions.</p>
 <pre class="r"><code>pred2 &lt;- predict(modFit,test)
 pred2</code></pre>
 <pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
